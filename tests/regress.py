@@ -80,12 +80,15 @@ step(lambda: ok("mini meter drag saves position", bool(app.cfg.get("mini_pos")),
 step(lambda: ok("mini meter auto-hides after TX", not app.mini.visible()), 10)
 step(lambda: root.event_generate("<Shift-Z>"), 600)
 step(lambda: ok("Shift+Z opens mini meter", app.mini.visible()), 10)
-step(lambda: (setattr(app, "h_before_wf", root.winfo_height()), root.event_generate("<Shift-Z>"), app.toggle_waterfall()), 1500)
-step(lambda: ok("waterfall on (demo audio)", app.wf_shown and app.wf.running and root.winfo_height() > 750, f"h={root.winfo_height()}"), 10)
-step(lambda: (app.toggle_float()), 1200)
-step(lambda: ok("pop-out waterfall", app._float_visible() and app.float_wf.W > 300), 10)
-step(lambda: (app.toggle_float(), app.toggle_waterfall()), 1200)
-step(lambda: ok("waterfall off closes audio + shrinks", not app.wf.running and root.winfo_height() <= app.h_before_wf + 4, f"h={root.winfo_height()} before={app.h_before_wf}"), 10)
+if app.wf.ok:   # waterfall (unfinished) only when its optional packages load
+    step(lambda: (setattr(app, "h_before_wf", root.winfo_height()), root.event_generate("<Shift-Z>"), app.toggle_waterfall()), 1500)
+    step(lambda: ok("waterfall on (demo audio)", app.wf_shown and app.wf.running and root.winfo_height() > 750, f"h={root.winfo_height()}"), 10)
+    step(lambda: (app.toggle_float()), 1200)
+    step(lambda: ok("pop-out waterfall", app._float_visible() and app.float_wf.W > 300), 10)
+    step(lambda: (app.toggle_float(), app.toggle_waterfall()), 1200)
+    step(lambda: ok("waterfall off closes audio + shrinks", not app.wf.running and root.winfo_height() <= app.h_before_wf + 4, f"h={root.winfo_height()} before={app.h_before_wf}"), 10)
+else:
+    step(lambda: root.event_generate("<Shift-Z>"), 600)   # close the mini meter as the waterfall steps did
 step(lambda: app.enter_compact(), 1500)
 step(lambda: ok("Compact View minimises", root.state() == "iconic" and app.mini.visible(), root.state()), 10)
 step(lambda: app.mini.full_btn.command(), 1500)
