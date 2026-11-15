@@ -1,0 +1,21 @@
+# Runs the tests on every push and pull request (practice radio, virtual screen).
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Tk, a virtual screen and a window manager
+        run: sudo apt-get update && sudo apt-get install -y python3-tk xvfb openbox libportaudio2
+      - name: Optional packages (the tests use them)
+        run: python3 -m pip install --user numpy sounddevice pillow
+      - name: Run the tests
+        run: |
+          bash tests/run_all.sh python3 | tee test_out.txt
+          grep -q "==" test_out.txt
+          ! grep -q "FAIL" test_out.txt

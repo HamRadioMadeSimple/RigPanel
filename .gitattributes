@@ -1,0 +1,16 @@
+# Keep line endings right on every PC (Windows Git would otherwise convert them).
+# Linux scripts break with Windows line endings; Windows batch / Inno Setup files want them.
+* text=auto eol=lf
+*.sh   text eol=lf
+*.py   text eol=lf
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.iss  text eol=crlf
+
+# Never touched as text
+*.png    binary
+*.ico    binary
+*.jpg    binary
+*.docx   binary
+*.zip    binary
+*.tar.gz binary

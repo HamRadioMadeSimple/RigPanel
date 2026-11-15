@@ -1,0 +1,234 @@
+{
+  "_about": "KW3KW example settings for RigPanel. Load with Settings > Load settings from a file. Your own sound device, flrig address and window places are kept.",
+  "theme": "Dark",
+  "mini_auto": true,
+  "mini_always": false,
+  "lv_auto": true,
+  "lv_always": false,
+  "levels_per_kind": true,
+  "memories": [
+    {
+      "hz": 7078000,
+      "mode": "USB-D",
+      "name": "JS8 Main 40M"
+    },
+    {
+      "hz": 7092000,
+      "mode": "USB-D",
+      "name": "HRMS"
+    },
+    {
+      "hz": 7110000,
+      "mode": "USB-D",
+      "name": "AmRRON 40M"
+    },
+    {
+      "hz": 7115000,
+      "mode": "USB-D",
+      "name": "Magnet"
+    },
+    {
+      "hz": 7125000,
+      "mode": "USB",
+      "name": "Voice Beginning"
+    },
+    {
+      "hz": 7157000,
+      "mode": "LSB",
+      "name": "Voice 1"
+    },
+    {
+      "hz": 7163000,
+      "mode": "LSB",
+      "name": "Voice Net"
+    },
+    {
+      "hz": 7300000,
+      "mode": "USB",
+      "name": "Voice Ending"
+    },
+    {
+      "hz": 14078000,
+      "mode": "USB-D",
+      "name": "JS8 Main 20M"
+    },
+    {
+      "hz": 14110000,
+      "mode": "USB-D",
+      "name": "AmRRON 20M"
+    },
+    {
+      "hz": 14115000,
+      "mode": "USB-D",
+      "name": "Magnet"
+    },
+    {
+      "hz": 14150000,
+      "mode": "USB",
+      "name": "Voice 20M Start"
+    },
+    {
+      "hz": 14213000,
+      "mode": "USB",
+      "name": "Voice 20M Net"
+    },
+    {
+      "hz": 14262000,
+      "mode": "USB",
+      "name": "Voice 20M 1"
+    },
+    {
+      "hz": 14350000,
+      "mode": "USB",
+      "name": "Voice 20M End"
+    }
+  ],
+  "levels_by_kind": {
+    "voice": {
+      "power": 95,
+      "micgain": 4,
+      "volume": 11,
+      "rfgain": 36
+    },
+    "data": {
+      "power": 39,
+      "micgain": 0,
+      "volume": 0,
+      "rfgain": 0
+    }
+  },
+  "bw_by_kind": {
+    "voice": {
+      "bw": "2400"
+    },
+    "data": {
+      "bw": "3000"
+    }
+  },
+  "ft891_macro_list": [
+    {
+      "name": "Voice-FC-50",
+      "group": "Operating",
+      "show": true,
+      "items": {
+        "MODE": "LSB/USB (by band)",
+        "WIDTH": "2400",
+        "1105": "MIC",
+        "1601": "100",
+        "1616": "MIC",
+        "0512": "DISABLE",
+        "1615": "EXTERNAL"
+      }
+    },
+    {
+      "name": "Voice-ATAS",
+      "group": "Operating",
+      "show": true,
+      "items": {
+        "MODE": "LSB/USB (by band)",
+        "WIDTH": "2400",
+        "1105": "MIC",
+        "1601": "100",
+        "1616": "MIC",
+        "0512": "ENABLE",
+        "1615": "ATAS"
+      }
+    },
+    {
+      "name": "Data-FC-50",
+      "group": "Operating",
+      "show": true,
+      "items": {
+        "MODE": "DATA-U",
+        "WIDTH": "3000",
+        "0503": "0",
+        "0801": "OTHERS",
+        "0809": "REAR",
+        "0810": "DAKY",
+        "0811": "35",
+        "0812": "USB",
+        "1106": "85",
+        "1601": "35",
+        "1603": "35",
+        "1616": "DATA",
+        "NB": "OFF",
+        "DNR": "OFF",
+        "DNF": "OFF",
+        "NOTCH": "OFF",
+        "0512": "DISABLE",
+        "1615": "EXTERNAL"
+      }
+    },
+    {
+      "name": "Data-ATAS",
+      "group": "Operating",
+      "show": true,
+      "items": {
+        "MODE": "DATA-U",
+        "WIDTH": "3000",
+        "0503": "0",
+        "0801": "OTHERS",
+        "0809": "REAR",
+        "0810": "DAKY",
+        "0811": "35",
+        "0812": "USB",
+        "1106": "85",
+        "1601": "35",
+        "1603": "35",
+        "1616": "DATA",
+        "NB": "OFF",
+        "DNR": "OFF",
+        "DNF": "OFF",
+        "NOTCH": "OFF",
+        "0512": "ENABLE",
+        "1615": "ATAS"
+      }
+    }
+  ],
+  "ic7300_macro_list": [
+    {
+      "name": "Voice",
+      "group": "Operating",
+      "show": true,
+      "items": {
+        "MODE": "LSB/USB (by band)",
+        "WIDTH": "2400",
+        "0066": "MIC",
+        "COMP": "ON",
+        "COMPLV": "3",
+        "TBW": "WIDE",
+        "MONI": "OFF",
+        "VOX": "OFF",
+        "AGC": "MID",
+        "NB": "ON",
+        "NR": "ON",
+        "NOTCH": "ON",
+        "IP+": "ON"
+      }
+    },
+    {
+      "name": "Data",
+      "group": "Operating",
+      "show": true,
+      "items": {
+        "MODE": "USB-D",
+        "WIDTH": "3000",
+        "0066": "USB",
+        "0067": "USB",
+        "0065": "40",
+        "0060": "50",
+        "0059": "AF",
+        "COMP": "OFF",
+        "MONI": "OFF",
+        "VOX": "OFF",
+        "AGC": "FAST",
+        "NB": "OFF",
+        "NR": "OFF"
+      }
+    }
+  ],
+  "seeded": [
+    "IC-7300",
+    "FT-891"
+  ]
+}

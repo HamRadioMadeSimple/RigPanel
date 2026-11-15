@@ -1,0 +1,5 @@
+# RigPanel runs on the Python standard library + Tk.
+# These three are only for the audio waterfall (RigPanel runs without them):
+numpy
+sounddevice
+pillow

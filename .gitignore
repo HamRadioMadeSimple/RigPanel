@@ -1,0 +1,23 @@
+__pycache__/
+*.pyc
+.venv/
+.buildenv/
+build/
+dist/
+output/
+*.spec
+RigPanel_Session_Handoff.md
+
+# Word masters of the guides stay on the developer's PC; docs/ holds the PDFs
+*.docx
+# your own settings and logs (never commit these)
+settings.json
+settings_before_load.json
+.rigpanel.json
+*.log
+# more build output
+AppDir/
+.appimagetool
+*.AppImage
+*.exe
+*.tar.gz
