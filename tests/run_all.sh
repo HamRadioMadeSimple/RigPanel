@@ -8,6 +8,7 @@ echo '{"port": 12401, "audio_device": "Demo (test tones)"}' > "$T/.rigpanel.json
 $PY "$HERE/tests/names_check.py" || exit 1
 Xvfb :91 -screen 0 1400x1000x24 >/dev/null 2>&1 & X=$!; sleep 1
 export DISPLAY=:91 HOME=$T
+unset XDG_CONFIG_HOME   # settings must go to the throwaway HOME (GitHub sets this variable)
 openbox >/dev/null 2>&1 & O=$!; sleep 1
 run() {  # run <test> <rig> [mock flag]
   rm -rf "$T/.config"
