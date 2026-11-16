@@ -96,12 +96,15 @@ step(lambda: ok("Full Panel restores", root.state() == "normal"), 10)
 step(lambda: app.apply_theme("Light"), 1500)
 step(lambda: ok("theme switch keeps state", app.theme == "Light" and app.ctl_values.get("nb") == 1 and app.freq_disp.hz is not None), 10)
 step(lambda: app.apply_theme("Dark"), 1200)
-def flist():
+def flist_open():
     app.mem_start = {m["hz"] for m in app._memories()}     # starting list (built-in for this radio)
-    app.open_freq_list(); w = app.freq_win; root.update(); w.freq_e.focus_force(); root.update()
+    app.open_freq_list(); root.update()
+def flist():                                                # window is on screen now (slow screens need the wait)
+    w = app.freq_win; w.freq_e.focus_force(); root.update()
     for f in ("7071", "3.575"):
-        w.freq_e.insert(0, f); w.freq_e.event_generate("<Return>"); root.update()
-step(flist, 800)
+        w.freq_e.insert(0, f); w.freq_e.event_generate("<Return>", when="tail"); root.update()
+step(flist_open, 1500)
+step(flist, 1500)
 step(lambda: (ok("frequency list add", {m["hz"] for m in app._memories()} - app.mem_start == {7071000, 3575000},
                  str(sorted({m["hz"] for m in app._memories()} - app.mem_start))), app.freq_win.destroy()), 10)
 if rig == "FT-891":
