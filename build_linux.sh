@@ -5,7 +5,7 @@
 # Build on the OLDEST Linux it should run on (GitHub builds the releases on Ubuntu 22.04).
 set -e
 cd "$(dirname "$0")"
-VER=1.4.3
+VER=1.4.4
 APPIMAGE=""; [ "$1" = "--appimage" ] && APPIMAGE=1
 
 echo "[1/3] Build tools (in .buildenv, nothing installed system-wide)..."
@@ -26,7 +26,7 @@ rm -rf "output/$TOP" output/*_Linux.tar.gz; mkdir -p "output/$TOP"
 cp -r dist/RigPanel/. "output/$TOP/"
 cp icon.png linux_install.sh "output/$TOP/"
 echo "$VER build $BUILD" > "output/$TOP/VERSION"
-for f in docs/RigPanel-Linux-Install.pdf docs/RigPanel_Quick_Start.pdf docs/RigPanel_v1.4.3_User_Guide.pdf; do [ -f "$f" ] && cp "$f" "output/$TOP/"; done
+for f in docs/RigPanel-Linux-Install.pdf docs/RigPanel_Quick_Start.pdf docs/RigPanel_v1.4.4_User_Guide.pdf; do [ -f "$f" ] && cp "$f" "output/$TOP/"; done
 tar -C output -czf "output/$TGZ" "$TOP"
 
 if [ -n "$APPIMAGE" ]; then

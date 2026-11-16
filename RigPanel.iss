@@ -1,6 +1,6 @@
 ; RigPanel installer (Inno Setup 6). Built by build_windows.bat.
 #ifndef MyVersion
-  #define MyVersion "1.4.3"
+  #define MyVersion "1.4.4"
 #endif
 
 [Setup]

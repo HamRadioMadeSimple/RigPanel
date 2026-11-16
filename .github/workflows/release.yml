@@ -1,4 +1,4 @@
-# Making a tag like v1.4.3 (on the Releases page) builds the Windows installer, the Linux .tar.gz
+# Making a tag like v1.4.4 (on the Releases page) builds the Windows installer, the Linux .tar.gz
 # and the AppImage, then attaches them to that release.  (Actions > Release > Run workflow also
 # builds them for testing, without a release.)
 name: Release

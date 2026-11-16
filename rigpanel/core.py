@@ -38,8 +38,8 @@ except ImportError:
 # Config / look
 # --------------------------------------------------------------------------
 APP_NAME = "RigPanel"
-APP_VERSION = "1.4.3"
-APP_BUILD = "2026-11-14h"     # bump on every release (YYYY-MM-DD + letter)
+APP_VERSION = "1.4.4"
+APP_BUILD = "2026-11-16j"     # bump on every release (YYYY-MM-DD + letter)
 
 def _data_dir():
     """Per-user folder for settings and the debug log (always writable, even when the app

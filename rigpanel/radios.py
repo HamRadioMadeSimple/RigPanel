@@ -504,9 +504,12 @@ def macro_choices(key, app=None):
     if key == "MODE":
         modes = [m for m in (app.modes if app else []) if m]
         return [SKIP, SSB_BY_BAND] + (modes or ["LSB", "USB", "DATA-U", "DATA-L", "CW-U", "AM", "FM"])
-    if key == "WIDTH":
-        return [SKIP] + ["300", "400", "500", "600", "800", "1200", "1400",           # CW (11-06e)
-                         "1800", "2100", "2400", "2700", "3000", "3200"]
+    if key in ("WIDTH", "WIDTH1", "WIDTH2", "WIDTH3"):
+        # same steps as the main BANDWIDTH list (IC-7300: 50 Hz to 500, then 100 Hz to 3600) plus every width the
+        # radio offers in the mode it is in now (FT-891's own steps) - 11-16a, was a short fixed list
+        ws = {str(w) for w in list(range(50, 500, 50)) + list(range(500, 3601, 100))}
+        ws |= {b for b in (app.bws if app else []) if str(b).isdigit()}
+        return [SKIP] + sorted(ws, key=int)
     if key == "FILTER":                      # IC-7300 FIL1/2/3 (27n)
         return [SKIP, "FIL1", "FIL2", "FIL3"]
     if key == "BKIN":                        # CW break-in, both radios (11-09a)
@@ -589,7 +592,7 @@ class _Absent:
 def generic_spec(family, name):
     filters = ({"NB": "nb", "NR": "nr", "NOTCH": "notch", "AUTO NOTCH": "anf"} if family == "icom"
                else dict(MACRO_FILTERS))
-    items = (["MODE", "FILTER", "WIDTH", "BKIN"] if family == "icom" else ["MODE", "WIDTH", "BKIN"]) + list(filters)
+    items = (["MODE", "FILTER", "WIDTH", "WIDTH1", "WIDTH2", "WIDTH3", "BKIN"] if family == "icom" else ["MODE", "WIDTH", "BKIN"]) + list(filters)
     labels = dict(IC7300_LABELS if family == "icom" else MACRO_LABELS)
     labels.update({"NR": "NR", "AUTO NOTCH": "Auto Notch", "BKIN": "BKIN (CW break-in)"})
     slug = re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_") or "radio"

@@ -4,7 +4,7 @@ A one-screen radio control panel that works **through [flrig](http://www.w1hkj.c
 fldigi and your other digital apps keep sharing the radio. RigPanel never opens the radio's COM port.
 Works with any radio flrig supports; full controls are built in for the **Icom IC-7300** and **Yaesu FT-891**.
 
-**Version 1.4.3** - Windows 10/11 and Linux (Mint 21 / Ubuntu 22.04 or newer, Debian 12). Tested with flrig **2.0.09** and **2.0.12**.
+**Version 1.4.4** - Windows 10/11 and Linux (Mint 21 / Ubuntu 22.04 or newer, Debian 12). Tested with flrig **2.0.09** and **2.0.12**.
 
 **Download:** [Releases page](https://github.com/HamRadioMadeSimple/RigPanel/releases/latest)
 
@@ -17,7 +17,10 @@ Works with any radio flrig supports; full controls are built in for the **Icom I
 - **Voice | Data | CW** in one row: each remembers its own width, levels, receive filters and frequency per band,
   and runs your **Rig Setting** of the same name (mode, width, menus) in one click.
 - **Rig Settings**: one-click groups of radio settings, including every menu item of both radios
-  (Edit Rig Settings: Common | All Menus, Read from radio, Save & Apply). ANTENNA buttons for tuner selection.
+  (Edit Rig Settings: Common | All Menus, Read from radio, one Save). ANTENNA buttons for tuner selection.
+  IC-7300: a width for each filter (Width FIL1 / FIL2 / FIL3).
+- **Default Settings**: your last settings stay, also after a restart; the Default Settings button (RECEIVE /
+  FILTERS) puts your Voice / Data / CW Rig Setting back at any time, and an amber note says what has changed.
 - **Meters** S / Po / SWR / ALC, **levels** RF Power / Mic / RF Gain / AF Volume + MUTE, RF gain per band.
 - **Receive / filters**: AGC, preamp, ATT, NB, NR/DNR, notch, IC-7300 FIL1/2/3, passband SHIFT,
   FT-891 PROC, **BKIN OFF / SEMI / FULL** in CW (both radios).
@@ -33,10 +36,10 @@ Works with any radio flrig supports; full controls are built in for the **Icom I
 
 ## Install
 
-**Windows:** download `RigPanel_Setup_1.4.3.exe` from the [Releases page](https://github.com/HamRadioMadeSimple/RigPanel/releases/latest) and run it (no Python needed). The installer isn't
+**Windows:** download `RigPanel_Setup_1.4.4.exe` from the [Releases page](https://github.com/HamRadioMadeSimple/RigPanel/releases/latest) and run it (no Python needed). The installer isn't
 code-signed: if Windows says "Windows protected your PC", click **More info > Run anyway**.
 
-**Linux:** save `RigPanel_Ver_1.4.3_Linux.tar.gz` from the [Releases page](https://github.com/HamRadioMadeSimple/RigPanel/releases/latest) in your **Downloads** folder, open a terminal
+**Linux:** save `RigPanel_Ver_1.4.4_Linux.tar.gz` from the [Releases page](https://github.com/HamRadioMadeSimple/RigPanel/releases/latest) in your **Downloads** folder, open a terminal
 (Ctrl+Alt+T) and paste:
 
 ```
@@ -45,13 +48,13 @@ mkdir -p ~/Applications && tar -xzf "$F" -C ~/Applications
 sh ~/Applications/"$(tar -tzf "$F" | head -n 1 | cut -d/ -f1)"/linux_install.sh
 ```
 
-It installs into `~/Applications/RigPanel Ver 1.4.3` with a menu entry and a desktop icon. The same lines update
+It installs into `~/Applications/RigPanel Ver 1.4.4` with a menu entry and a desktop icon. The same lines update
 it. The ready-made Linux package runs on Linux Mint 21 / Ubuntu 22.04 or newer on 64-bit PCs; on anything else
 (older Linux, Raspberry Pi) run from source (below). Prefer one file? `RigPanel-x86_64.AppImage` on the Releases page
 runs without installing (make it executable, then double-click). Details:
 [docs/RigPanel-Linux-Install.pdf](docs/RigPanel-Linux-Install.pdf).
 
-Guides: [User Guide](docs/RigPanel_v1.4.3_User_Guide.pdf) · [Quick Start](docs/RigPanel_Quick_Start.pdf) ·
+Guides: [User Guide](docs/RigPanel_v1.4.4_User_Guide.pdf) · [Quick Start](docs/RigPanel_Quick_Start.pdf) ·
 [Linux install](docs/RigPanel-Linux-Install.pdf).
 
 ## Works with your radio
@@ -119,8 +122,8 @@ The release files are built by GitHub (`.github/workflows/release.yml`, Linux on
 tag is made. To build yourself:
 
 - Windows: `build_windows.bat` (needs Python 3.9+ and [Inno Setup 6](https://jrsoftware.org/isdl.php))
-  -> `output\RigPanel_Setup_1.4.3.exe`
-- Linux: `bash build_linux.sh` (`--appimage` also makes the AppImage) -> `output/RigPanel_Ver_1.4.3_Linux.tar.gz`.
+  -> `output\RigPanel_Setup_1.4.4.exe`
+- Linux: `bash build_linux.sh` (`--appimage` also makes the AppImage) -> `output/RigPanel_Ver_1.4.4_Linux.tar.gz`.
   Build on the oldest Linux you want it to run on.
 
 ## Layout

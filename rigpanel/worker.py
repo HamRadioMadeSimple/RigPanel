@@ -78,6 +78,7 @@ class FlrigWorker(threading.Thread):
         self.macro_pending = []
         self.cat_read_failed = set()
         self.macro_read_due = 0.0
+        self.macro_read_once = False
         self.ex_unsupported = set()
         self.menu_known = {}           # menu code -> (value, when read/confirmed) - quick Voice/Data/CW
         self.ex_fail = {}
@@ -265,6 +266,7 @@ class FlrigWorker(threading.Thread):
         self.cycle = 0                         # next poll (cycle 1) reads every level
         self.macro_pending = []
         self.macro_read_due = 0.0              # and the macro menu items
+        self.macro_read_once = False
 
     def vfo_copy(self):
         """A=B: copy the VFO in use (frequency) to the other one."""
@@ -399,6 +401,7 @@ class FlrigWorker(threading.Thread):
             self.post("macro_done", {"name": name, "ok": 0, "failed": ["radio is transmitting - nothing changed"]})
             return
         ok, failed, seen = 0, [], {}
+        steps = self._filter_widths_order(steps)
         try:
             self._run_steps(name, steps, failed, seen)
             ok = len(steps) - len(failed)
@@ -410,6 +413,26 @@ class FlrigWorker(threading.Thread):
             if len(failed) + ok < len(steps):          # stopped part-way (flrig gone)
                 failed.append("stopped - flrig stopped answering")
             self.post("macro_done", {"name": name, "ok": ok, "failed": failed})
+
+    def _filter_widths_order(self, steps):
+        """IC-7300 Width FIL1/2/3 (11-16b): set each filter's width first, then go to the starting filter
+        (or back to the filter in use) and its Width."""
+        fw = [s for s in steps if s[0] in ("WIDTH1", "WIDTH2", "WIDTH3")]
+        if not fw or self._control("filter") is None:
+            return [s for s in steps if s not in fw]
+        rest = [s for s in steps if s not in fw and s[0] not in ("FILTER", "WIDTH")]
+        start = [s for s in steps if s[0] == "FILTER"]
+        if not start:
+            ctl = self._control("filter")
+            try:
+                now = self.profile.parse_read(ctl, self.cat_read(self.profile.read_string(ctl)))
+            except (xmlrpc.client.Fault, socket.timeout):
+                now = None
+            start = [("FILTER", f"FIL{now}")] if now in (1, 2, 3) else []
+        width = [s for s in steps if s[0] == "WIDTH"]
+        mode = [s for s in rest if s[0] == "MODE"]
+        others = [s for s in rest if s[0] != "MODE"]
+        return mode + fw + start + width + others
 
     def _run_steps(self, name, steps, failed, seen):
         for key, val in steps:
@@ -432,6 +455,16 @@ class FlrigWorker(threading.Thread):
                     time.sleep(0.15)
                     got = self.profile.parse_read(ctl, self.cat_read(self.profile.read_string(ctl)))
                     good = got == want
+                elif key in ("WIDTH1", "WIDTH2", "WIDTH3"):   # pick that filter, then set its width
+                    ctl = self._control("filter")
+                    self.set_filter(ctl, int(key[-1]))
+                    time.sleep(0.15)
+                    self.set_bandwidth(str(val), 0)
+                    time.sleep(0.2)
+                    bw = self.try_rpc("rig.get_bw")
+                    bw = bw[0] if isinstance(bw, (list, tuple)) and bw else bw
+                    got = parse_hz(bw or "")
+                    good = got is not None and abs(got - int(val)) <= 100
                 elif key == "WIDTH":
                     self.set_bandwidth(str(val), 0)
                     time.sleep(0.2)
@@ -881,14 +914,21 @@ class FlrigWorker(threading.Thread):
             self.full_read = False
             self.ctl_pending = list(prof.controls)
         if self.ctl_pending:
-            self.read_control(self.ctl_pending.pop(0))
+            for _ in range(3):                  # 11-16i: three per poll after connect - the panel is ready sooner
+                if self.ctl_pending:
+                    self.read_control(self.ctl_pending.pop(0))
             return
         if self.macro_codes:
             if not self.macro_pending and now >= self.macro_read_due:
-                self.macro_pending = sorted(self.macro_codes - self.ex_unsupported)
+                first = getattr(self, "macro_first", set())    # 11-16i: Voice / Data / CW Rig Settings first
+                self.macro_pending = sorted(self.macro_codes - self.ex_unsupported, key=lambda c: (c not in first, c))
                 self.macro_read_due = now + MACRO_CYCLE_S * self.pace()
             if self.macro_pending:
-                self.read_macro_state([self.macro_pending.pop(0)])
+                n = 3 if not getattr(self, "macro_read_once", False) else 1     # first pass after connect: faster
+                self.read_macro_state(self.macro_pending[:n])
+                del self.macro_pending[:n]
+                if not self.macro_pending:
+                    self.macro_read_once = True
                 return
         for name, needs, voice_only in self.EXTRA_READS:     # SHIFT / CLAR follow the radio's own knobs
             if hasattr(prof, needs) and now >= self.extra_due.get(name, 0.0) and \

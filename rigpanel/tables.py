@@ -349,12 +349,13 @@ def ic7300_section(code):
 
 
 IC7300_FILTERS = {"NB": "nb", "NR": "nr", "NOTCH": "notch", "AUTO NOTCH": "anf", "IP+": "ipplus"}
-IC7300_ITEMS = ["MODE", "FILTER", "WIDTH", "BKIN", "0066", "0067", "0065", "0064", "0060", "0059", "COMP", "COMPLV", "TBW",
+IC7300_ITEMS = ["MODE", "FILTER", "WIDTH", "WIDTH1", "WIDTH2", "WIDTH3", "BKIN", "0066", "0067", "0065", "0064", "0060", "0059", "COMP", "COMPLV", "TBW",
                 "MONI", "VOX", "AGC", "NB", "NR", "NOTCH", "AUTO NOTCH", "IP+"]
 IC7300_ALL_ITEMS = (IC7300_ITEMS[:IC7300_ITEMS.index("NB")]
                     + [c for c in sorted(IC7300_MENU) if c.isdigit() and c not in IC7300_ITEMS]
                     + IC7300_ITEMS[IC7300_ITEMS.index("NB"):])
-IC7300_LABELS = {"BKIN": "BKIN (CW break-in)", "MODE": "Mode", "FILTER": "Filter (FIL1/2/3)", "WIDTH": "Width (Hz)", "NB": "NB (noise blanker)", "NR": "NR (noise reduction)",
+IC7300_LABELS = {"BKIN": "BKIN (CW break-in)", "MODE": "Mode", "FILTER": "Filter (FIL1/2/3)", "WIDTH": "Width (Hz)",
+                 "WIDTH1": "Width FIL1 (Hz)", "WIDTH2": "Width FIL2 (Hz)", "WIDTH3": "Width FIL3 (Hz)", "NB": "NB (noise blanker)", "NR": "NR (noise reduction)",
                  "NOTCH": "Notch", "AUTO NOTCH": "Auto Notch", "IP+": "IP+"}
 IC7300_DEFAULT_MACROS = [   # a typical voice / data pair (based on KW3KW's setup guides)
     {"name": "Voice", "group": "Operating", "show": True,

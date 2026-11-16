@@ -116,7 +116,7 @@ class MacroBuilder(tk.Toplevel):
             tk.Label(vs, text="Common = the settings most used for Voice and Data", bg=C["panel"], fg=C["dim"],
                      font=(FONT.ui, 8)).pack(side="left", padx=8)
         self.common_f = tk.Frame(right, bg=C["panel"])
-        self._grid_rows(self.common_f, MACROS.common, width=18)
+        self._grid_rows(self.common_f, self._shown(MACROS.common), width=18)
         self.all_f = tk.Frame(right, bg=C["panel"])
         if MACROS.sections:
             self._build_all_view(self.all_f)
@@ -126,10 +126,9 @@ class MacroBuilder(tk.Toplevel):
 
         foot = tk.Frame(self, bg=C["bg"])
         foot.pack(fill="x", padx=8, pady=8)
-        tips = (("  Save  ", self.save, dict(font=(FONT.ui, 10, "bold"), base=C["tx"], base_fg="#ffffff"), (0, 0),
-                 "Save your changes (the radio isn't changed until you press the button)"),
-                ("Save & Apply", self.save_apply, dict(font=(FONT.ui, 10, "bold"), base=C["go"], base_fg=C["go_fg"]),
-                 (6, 0), "Save, then send this Rig Setting to the radio now"),
+        tips = (("  Save  ", self.save, dict(font=(FONT.ui, 10, "bold"), base=C["go"], base_fg=C["go_fg"]), (0, 0),
+                 "Save. The Rig Setting you're using now (e.g. Voice while in Voice) goes to the radio at once; "
+                 "the others are used the next time you click their button"),
                 ("Defaults", self.defaults, dict(font=(FONT.ui, 9, "bold")), (6, 6),
                  "Replace ALL Rig Settings with RigPanel's starting set (click twice; Save to keep them)"))
         for text, cmd, kw, pad, tip in tips:
@@ -155,9 +154,14 @@ class MacroBuilder(tk.Toplevel):
             except tk.TclError:
                 pass
 
+    @staticmethod
+    def _shown(keys):
+        """IC-7300 (and added Icom radios): a width row per filter instead of the one Width row (11-16b)."""
+        return [k for k in keys if not (k == "WIDTH" and "WIDTH1" in MACROS.all_items)]
+
     # ---- the two views ----
     def _combo(self, master, key, width):
-        numeric = key == "WIDTH" or (key in MACROS.menu and not isinstance(MACROS.menu[key][2], dict))
+        numeric = key.startswith("WIDTH") or (key in MACROS.menu and not isinstance(MACROS.menu[key][2], dict))
         return ttk.Combobox(master, textvariable=self.cells[key], values=macro_choices(key, self.app),
                             width=width, state="normal" if numeric else "readonly")
 
@@ -170,7 +174,8 @@ class MacroBuilder(tk.Toplevel):
     def _build_all_view(self, f):
         quick = tk.Frame(f, bg=C["panel"])
         quick.pack(fill="x")
-        top_keys = [k for k in ("MODE", "FILTER", "WIDTH", "BKIN") if k in MACROS.all_items]   # FILTER: IC-7300 only
+        top_keys = self._shown([k for k in ("MODE", "FILTER", "WIDTH", "WIDTH1", "WIDTH2", "WIDTH3", "BKIN")
+                                 if k in MACROS.all_items])   # FILTER: IC-7300 only
         self._grid_rows(quick, top_keys, width=18)
         names = " / ".join(k if k.isupper() and len(k) <= 3 else k.title() for k in MACROS.filters)
         tk.Label(quick, text=names, bg=C["panel"], fg=C["fg"], font=(FONT.ui, 9, "bold"),
@@ -371,6 +376,13 @@ class MacroBuilder(tk.Toplevel):
         self.show_var.set(m.get("show", True))
         for key, var in self.cells.items():
             var.set(m["items"].get(key) or SKIP)
+        it = m["items"]
+        if "WIDTH1" in self.cells and it.get("WIDTH") not in (None, "", SKIP):
+            # an older Rig Setting: its one Width belongs to its starting filter (FIL1 if it had none)
+            n = str(it.get("FILTER") or "FIL1")[-1]
+            if self.cells[f"WIDTH{n}"].get() in ("", SKIP):
+                self.cells[f"WIDTH{n}"].set(str(it["WIDTH"]))
+            self.cells["WIDTH"].set(SKIP)
         self._loading = False
 
     def _commit(self):
@@ -390,7 +402,7 @@ class MacroBuilder(tk.Toplevel):
             try:
                 if key in MACROS.menu:
                     menu_encode(key, v)
-                elif key == "WIDTH" and not v.isdigit():
+                elif key.startswith("WIDTH") and not v.isdigit():
                     raise ValueError("Width: enter a number of Hz, e.g. 2400")
             except ValueError as e:
                 return str(e)
@@ -482,6 +494,9 @@ class MacroBuilder(tk.Toplevel):
             return self.say("Not connected to the radio.", C["amber"])
         keys = [k for k in (MACROS.common if everything else MACROS.all_items)
                 if everything or self.cells[k].get() not in ("", SKIP)]
+        if any(k in ("WIDTH1", "WIDTH2", "WIDTH3") for k in keys):    # the radio shows the width of the filter in use
+            keys = [k for k in keys if k not in ("WIDTH1", "WIDTH2", "WIDTH3")]
+            keys += [k for k in ("FILTER", "WIDTH") if k not in keys]
         if not keys:
             return self.say("This Rig Setting has no settings yet - use 'Read all settings'.", C["amber"])
         self.say("Reading the radio...")
@@ -501,6 +516,10 @@ class MacroBuilder(tk.Toplevel):
                             C["green"])
         if tag != self.sel:
             return
+        vals = dict(vals)
+        if "WIDTH1" in self.cells and "WIDTH" in vals:      # the width read is that of the filter in use
+            n = str(vals.get("FILTER") or self.cells["FILTER"].get() or "FIL1")[-1]
+            vals[f"WIDTH{n if n in '123' else '1'}"] = vals.pop("WIDTH")
         for key, v in vals.items():
             cur = self.cells[key].get()
             if key == "MODE" and cur == SSB_BY_BAND and v in ("LSB", "USB"):
@@ -552,25 +571,30 @@ class MacroBuilder(tk.Toplevel):
         self.say("Defaults loaded - Save to keep them.")
 
     def save(self):
+        """One button (11-16e): save, and send it to the radio when it's the Rig Setting in use - Voice / Data /
+        CW for the mode you're in, or one whose button was green. Others wait for their button."""
         err = self._commit()
         if err:
             return self.say(err, C["red"])
-        self.app.save_macro_list(self.work)
+        app = self.app
+        name = self.work[self.sel]["name"] if self.sel is not None and self.sel < len(self.work) else None
+        old = app._find_macro(name) if name else None
+        kind = next((k for k, n in app.KIND_NAMES.items() if name and n.lower() == name.strip().lower()), None)
+        in_use = bool(name and app.connected and (
+            (kind is not None and app.mode and memory_kind(app.mode) == kind)
+            or (kind is None and old is not None and app._macro_matches(name))))
+        app.save_macro_list(self.work)
         self.dirty = False
         self._refresh_list(self.sel or 0)
-        self.say("Saved - the buttons are updated.", C["green"])
-
-    def save_apply(self):
-        """Save, then send this Rig Setting to the radio now (same as its button in the main window)."""
-        err = self._commit()
-        if err:
-            return self.say(err, C["red"])
-        if self.sel is None or self.sel >= len(self.work):
-            return self.say("Pick a Rig Setting first.", C["amber"])
-        self.save()
-        name = self.work[self.sel]["name"]
-        self.say(f"Saved - applying '{name}' to the radio...", C["green"])
-        self.app.run_macro(name)
+        if in_use:
+            self.say(f"Saved - '{name}' is in use, sending it to the radio...", C["green"])
+            app.run_macro(name, only_changed=True)
+        elif kind is not None:
+            self.say(f"Saved - used the next time you click {name} on the MODE row.", C["green"])
+        elif name:
+            self.say(f"Saved - used the next time you click its '{name}' button.", C["green"])
+        else:
+            self.say("Saved.", C["green"])
 
     def close(self):
         self._commit()

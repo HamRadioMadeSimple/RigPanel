@@ -1,6 +1,51 @@
 # Changelog
 
-## 1.4.3 - first release on GitHub (build 2026-11-14h)
+## 1.4.4 - first release on GitHub (build 2026-11-16j)
+RigPanel is a one-screen control panel that works through flrig, so your digital apps keep sharing the radio.
+- **Tap Ctrl** alone in any program and RigPanel comes forward; tap again and it minimizes (can be turned off in Settings).
+- **Default Settings** button under RECEIVE / FILTERS: your last settings stay, also after a restart. One click puts
+  your Voice / Data / CW Rig Setting back. When the radio has drifted from it, the button turns amber and a note says
+  what changed (for example "Changed from your Voice settings: NB, AGC").
+- Full controls for the **Icom IC-7300** and **Yaesu FT-891**; any other radio flrig supports works for frequency,
+  mode, bandwidth, VFOs, meters and levels. **Add my radio** (bottom of the Rig list) adds other Icom / Yaesu models,
+  and opens by itself for a radio RigPanel doesn't know.
+- **Voice | Data | CW** buttons, each with its own width, levels and Rig Setting; **BKIN OFF / SEMI / FULL** on both radios.
+- **Rig Settings**: one-click groups of radio settings, including every menu item of both radios. Edit them with one
+  **Save**: it's sent at once if that Rig Setting is in use.
+- **IC-7300:** a width for each filter (Width FIL1 / FIL2 / FIL3), with every width step the radio offers.
+- **Fast:** only the settings the radio doesn't already have are sent.
+- 42 **starter frequencies** (160-10 m) on a new install, grouped by band; **Mini Meter** and **Mini Levels**; Dark / Light themes.
+- Linux package runs on Mint 21 / Ubuntu 22.04 or newer; an AppImage is included too.
+- Guides as PDF in `docs/`; problems go to the GitHub Issues page.
+
+## 1.4.4 - builds 2026-11-16a to 16j (details)
+- Fix (Linux): the FT-891 **PROC level menu closed at once** - 0-100 % was taller than the room below, so it opened
+  over the mouse pointer and caught the button release. Long level menus now come in columns and open above the
+  arrow when they don't fit below. The Default Settings note lists 4 items, then "and n more".
+- **Default Settings note sooner after start:** receive controls read three at a time after connecting, the
+  Voice / Data / CW Rig Settings' menu items first; known differences show at once, the rest as they're read
+  (slow practice radio: 8.2 s -> 5.1 s). Values not read yet never count as "changed".
+- **Faster Save / Default Settings / Voice-Data-CW:** only the settings the radio doesn't already have are sent;
+  Width FIL1/2/3 only when a different width went to that filter since (on the slow practice radio 6 s -> under 1 s).
+- **Default Settings** button under RECEIVE / FILTERS (when the mode in use has a Voice / Data / CW Rig Setting):
+  puts that Rig Setting back at any time. Beside it, in amber, what the radio has changed from it ("Changed from
+  your Voice settings: NB, NR"). Your last settings stay as they are, also after a restart - RigPanel never puts
+  the Rig Setting back on its own.
+- Edit Rig Settings: **one Save button** (Save & Apply removed). Saving the Rig Setting in use - Voice / Data / CW
+  for the mode you're in, or one whose button is green - sends it to the radio at once; others are used the next
+  time you click their button (the status line says which).
+- Fix: a Rig Setting's NB / NR / Notch / Auto Notch / IP+ could be undone right after by "Separate settings for
+  Voice, Data and CW" (it put back the filters last clicked on the main screen). Applying a Rig Setting now makes
+  its values that kind's remembered filters.
+- `build_windows.bat` uses `python` first and the `py` launcher only without it (py failed on a locked py.ini).
+- **IC-7300 (and added Icom radios): a width for each filter.** Edit Rig Settings has Width FIL1 / FIL2 / FIL3
+  instead of one Width. Applying sets each filter's width, then goes to the starting Filter (or back to the filter
+  in use). Voice / Data / CW remember a width per filter too, so FIL1 / FIL2 / FIL3 never mix. An older Rig
+  Setting's Width shows as the width of its starting filter (FIL1 if none) and works as before until saved.
+- Edit Rig Settings: the Width list has the same steps as the main BANDWIDTH list (50 Hz to 500, 100 Hz to 3600)
+  plus every width the radio offers in its current mode (was a short fixed list: 2700, 3000, 3200...).
+
+## 1.4.3 - build 2026-11-14h (summary)
 RigPanel is a one-screen control panel that works through flrig, so your digital apps keep sharing the radio.
 - Full controls for the **Icom IC-7300** and **Yaesu FT-891**; any other radio flrig supports works for frequency,
   mode, bandwidth, VFOs, meters and levels. **Settings ▾ > Add my radio** adds other Icom / Yaesu models.
@@ -8,7 +53,6 @@ RigPanel is a one-screen control panel that works through flrig, so your digital
 - **Rig Settings**: one-click groups of radio settings, including every menu item of both radios.
 - 42 **starter frequencies** (160-10 m) on a new install; **Mini Meter** and **Mini Levels**; Dark / Light themes.
 - **Tap Ctrl** in any program to bring RigPanel forward (can be turned off in Settings).
-- Releases are now built by GitHub: the Linux package runs on Mint 21 / Ubuntu 22.04 or newer; an AppImage is added.
 - Guides as PDF in `docs/`; problems go to the GitHub Issues page.
 
 ## 1.4.3 - builds 2026-11-14d to 14h

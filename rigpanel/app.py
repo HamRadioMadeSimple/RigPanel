@@ -139,6 +139,7 @@ class App(Extras):
         self.mode_var.set(self.mode)
         if self.mode:
             self.vd.set(memory_kind(self.mode))
+            self._mark_kind_buttons()
         self._status(*self.last_status)
         self.rig_val.config(text=self.xcvr or "--")
         self.sliders["power"].set_max(self.pmax)
@@ -511,8 +512,19 @@ class App(Extras):
                 arrow.pack(side="left", padx=(1, 4))
                 Tooltip(arrow, f"{ctl.label} level")
                 self.worker.submit(lambda w, c=ctl: w.ctl_level(c))
-        tk.Label(self.rx_body, text=f"Profile: {prof.name}", bg=C["panel"], fg=C["profile"],
-                 font=(FONT.ui, 12, "bold")).pack(anchor="w", pady=(8, 0))
+        # 11-16g: "changed from your Voice settings" notice (packed only when the radio differs)
+        self.kind_note = tk.Frame(self.rx_body, bg=C["panel"])
+        self.kind_note_btn = FlatButton(self.kind_note, "Default Settings", font=(FONT.ui, 9, "bold"))
+        self.kind_note_btn.pack(side="left", anchor="n")
+        Tooltip(self.kind_note_btn, lambda: f"Return the radio to your {self.KIND_NAMES.get(memory_kind(self.mode or ''), 'Voice')}"
+                                            " Rig Setting (Edit Rig Settings). Your last settings are kept until you click it")
+        self.kind_note_lbl = tk.Label(self.kind_note, bg=C["panel"], fg=C["amber"], font=(FONT.ui, 9, "bold"),
+                                      justify="left", anchor="w", wraplength=240)
+        self.kind_note_lbl.pack(side="left", anchor="w", padx=(8, 0))
+        self.kind_note_shown = None
+        self.profile_lbl = tk.Label(self.rx_body, text=f"Profile: {prof.name}", bg=C["panel"], fg=C["profile"],
+                                    font=(FONT.ui, 12, "bold"))
+        self.profile_lbl.pack(anchor="w", pady=(8, 0))
         for key, v in self.ctl_values.items():
             self._show_ctl(key, v)
         self.m_alc.set_zone(prof.alc_zone)
@@ -715,8 +727,14 @@ class App(Extras):
         if not self._recent("mode"):
             self.mode_var.set(self.mode)
             self.vd.set(memory_kind(self.mode))
+            self._mark_kind_buttons()
         if not self._recent("bw") and d.get("bw"):
             self.bw_var.set(d["bw"])
+            fil, got = self.ctl_values.get("filter"), parse_hz(d["bw"])
+            key = f"{memory_kind(self.mode)}:{fil}" if self.mode else None
+            sent = self.cfg.get("fil_width_sent", {}).get(key)
+            if fil in (1, 2, 3) and got and sent and abs(got - int(sent)) > 100 and not self.macro_busy:
+                self.cfg["fil_width_sent"].pop(key, None)    # width changed on the radio: send it again next time
 
         if "ab" in d and not self._recent("vfo"):
             # FT-891: the radio only swaps, so "VFO A / B" is which side RigPanel last swapped to
@@ -862,11 +880,20 @@ class App(Extras):
         m = self._menu(self.root)
         m.config(selectcolor=C["go"])               # the tick on the current level, visible on dark menus
         m.add_command(label=f"{ctl.label} level", state="disabled")
-        for n in range(lo, hi + 1, step):
+        values = list(range(lo, hi + 1, step))
+        per_col = 11 if len(values) > 16 else len(values)       # 11-16j: long lists (PROC 0-100) in columns
+        for i, n in enumerate(values):
             m.add_radiobutton(label=f"{n} %" if hi == 100 else str(n), variable=var, value=n,
+                              columnbreak=1 if i and i % per_col == 0 else 0,
                               command=lambda n=n: self.worker.submit(lambda w: w.ctl_level(ctl, n)))
         self.worker.submit(lambda w: w.ctl_level(ctl))           # refresh for next time
-        popup_menu(m, widget.winfo_rootx(), widget.winfo_rooty() + widget.winfo_height())
+        # below the arrow, or above it if it doesn't fit - a menu opened over the mouse pointer on Linux
+        # catches the button release and closes at once (11-16j: PROC's menu "won't stay up")
+        m.update_idletasks()
+        x, y = widget.winfo_rootx(), widget.winfo_rooty() + widget.winfo_height()
+        if y + m.winfo_reqheight() > screen_bounds(widget)[3]:
+            y = max(0, widget.winfo_rooty() - m.winfo_reqheight())
+        popup_menu(m, x, y)
 
     def _show_ctl(self, key, value):
         w = self.ctl_widgets.get(key)
@@ -1152,8 +1179,13 @@ class App(Extras):
     def set_voice_data(self, kind):
         m = self._kind_macro(kind) if self._has_macros() else None
         if m is not None:
-            if m["items"].get("WIDTH"):           # its width is this kind's width from now on
-                self.cfg.setdefault("bw_by_kind", {}).setdefault(kind, {})["bw"] = str(m["items"]["WIDTH"])
+            w = self.kind_width(m["items"])
+            if w:                                 # its width is this kind's width from now on
+                mem = self.cfg.setdefault("bw_by_kind", {}).setdefault(kind, {})
+                mem["bw"] = str(w)
+                for n in "123":                   # and each filter's width (IC-7300, 11-16b)
+                    if m["items"].get(f"WIDTH{n}"):
+                        mem.setdefault("bw_fil", {})[n] = str(m["items"][f"WIDTH{n}"])
                 save_config(self.cfg)
             mode = self.pick_mode(kind, self.freq or 14_000_000)
             want = str(m["items"].get("MODE") or "")
@@ -1166,7 +1198,7 @@ class App(Extras):
                 if bw:
                     self.bw_var.set(bw)           # show the new width at once too
                     self.touched["bw"] = time.monotonic() + 4
-            self.root.after(300, lambda n=m["name"]: self.run_macro(n, quick=True))
+            self.root.after(300, lambda n=m["name"]: self.run_macro(n, quick=True, only_changed=True))
             return
         mode = self.pick_mode(kind, self.freq or 14_000_000)
         if not mode:
@@ -1202,6 +1234,10 @@ class App(Extras):
         mem = self._kind_memory("bw_by_kind")
         if mem is not None:
             mem["bw"] = text
+            fil = self.ctl_values.get("filter")
+            if fil in (1, 2, 3):                  # IC-7300: each filter keeps its own width (11-16b)
+                mem.setdefault("bw_fil", {})[str(fil)] = text
+                self.cfg.get("fil_width_sent", {}).pop(f"{memory_kind(self.mode)}:{fil}", None)
             save_config(self.cfg)
         self.worker.submit(lambda w: w.set_bandwidth(text, idx))
 
@@ -1326,7 +1362,10 @@ class App(Extras):
     DEFAULT_BW = {"voice": "2400", "data": "3000", "cw": "500"}   # until the operator picks their own
 
     def _restore_bw(self, kind, wait=False):
-        want = self.cfg.get("bw_by_kind", {}).get(kind, {}).get("bw") or self.DEFAULT_BW.get(kind)
+        mem = self.cfg.get("bw_by_kind", {}).get(kind, {})
+        fil = self.ctl_values.get("filter")
+        want = (mem.get("bw_fil", {}).get(str(fil)) if fil in (1, 2, 3) else None) \
+            or mem.get("bw") or self.DEFAULT_BW.get(kind)
         if wait:                                  # mode just changed: wait for its width list (_on_tables)
             self.pending_bw = kind
             return bool(want)
@@ -1460,7 +1499,12 @@ class App(Extras):
             codes = set(MACROS.always_read)         # FT-891: TUNE checks 16-15 TUNER SELECT
             for m in self.macro_list():
                 codes |= {k for k in m["items"] if k in MACROS.menu}
-            self.worker.submit(lambda w: (setattr(w, "macro_codes", codes), setattr(w, "macro_read_due", 0.0)))
+            first = set()
+            for k in self.KIND_NAMES:
+                m = self._kind_macro(k)
+                first |= {c for c in (m["items"] if m else {}) if c in MACROS.menu}
+            self.worker.submit(lambda w: (setattr(w, "macro_codes", codes), setattr(w, "macro_first", first),
+                                          setattr(w, "macro_read_due", 0.0)))
         else:
             self.macro_row.pack_forget()
             self.worker.submit(lambda w: setattr(w, "macro_codes", set()))
@@ -1485,13 +1529,19 @@ class App(Extras):
                 continue      # e.g. Mode CW saved in the Voice setting by "Read from radio" (11-06k)
             if key in MACROS.menu:
                 steps.append((key, menu_encode(key, v)))
-            elif key == "WIDTH":
+            elif key.startswith("WIDTH"):
                 steps.append((key, int(v)))
             else:
                 steps.append((key, v))
         return steps
 
-    def run_macro(self, name, quick=False):
+    @staticmethod
+    def kind_width(items):
+        """The width a Rig Setting gives its starting filter (Width, or Width FILn of its Filter)."""
+        n = str(items.get("FILTER") or "FIL1")[-1]
+        return items.get(f"WIDTH{n}") or items.get("WIDTH")
+
+    def run_macro(self, name, quick=False, only_changed=False):
         if not self._need_link() or not self._has_macros():
             return
         if self.ptt:
@@ -1505,7 +1555,15 @@ class App(Extras):
         except ValueError as e:
             self.log(f"{name}: {e} - fix it with Edit...")
             return
+        if only_changed:
+            steps = self._only_changed(name, steps)
+            if not steps:
+                self.log(f"{name}: the radio already matches - nothing to send.")
+                self._mark_kind_buttons()
+                return
         self.macro_busy = name
+        self.macro_running = (name, steps)
+        self._remember_macro_ctls(name, steps)
         b = self.macro_btns.get(name)
         if b is not None:
             b.set_on(True, C["amber"])
@@ -1519,8 +1577,37 @@ class App(Extras):
                 self._macro_done({"name": name, "ok": 0, "failed": ["no answer from flrig in 90 s"]})
         self.root.after(90_000, unstick)
 
+    def _remember_macro_ctls(self, name, steps):
+        """A Rig Setting's NB / NR / Notch / ... become that kind's remembered receive filters, so Separate
+        settings for Voice, Data and CW doesn't put the old ones back right after (11-16d)."""
+        if not self.profile:
+            return
+        kind = next((k for k, n in self.KIND_NAMES.items() if n.lower() == name.strip().lower()), None)
+        if kind is None:
+            mode = next((v for k, v in steps if k == "MODE"), None)
+            kind = "voice" if mode == SSB_BY_BAND else memory_kind(mode) if mode else \
+                (memory_kind(self.mode) if self.mode else None)
+        if kind is None:
+            return
+        mem = self.cfg.setdefault("ctl_by_kind", {}).setdefault(kind, {})
+        changed = False
+        for key, v in steps:
+            ck = MACROS.filters.get(key)
+            if ck and v in ("ON", "OFF"):
+                mem[ck] = 1 if v == "ON" else 0
+                changed = True
+        if changed:
+            save_config(self.cfg)
+
     def _macro_done(self, r):
         self.macro_busy = None
+        name, steps = getattr(self, "macro_running", (None, []))
+        if name == r["name"]:
+            kind = self._run_kind(name, steps)
+            for key, val in steps:
+                if key in ("WIDTH1", "WIDTH2", "WIDTH3") and item_label(key) not in r["failed"]:
+                    self.cfg.setdefault("fil_width_sent", {})[f"{kind}:{key[-1]}"] = str(val)
+            save_config(self.cfg)
         b = self.macro_btns.get(r["name"])
         if b is not None and b.winfo_exists():
             b.on_color = C["go"]
@@ -1537,43 +1624,105 @@ class App(Extras):
             msg, col = f"{r['name']}: all {r['ok']} settings applied and confirmed \u2713", "green"
         self.log(msg)
         if self.macro_win is not None and self.macro_win.winfo_exists():
-            self.macro_win.say(msg, C[col])          # Save & Apply: the answer shows in the editor too
+            self.macro_win.say(msg, C[col])          # Save (in use): the answer shows in the editor too
         self.refresh_macro_buttons()
 
     def _macro_matches(self, name):
+        try:
+            if any(self.macro_state.get(k) is None for k, _ in self._macro_steps(name) if k in MACROS.menu
+                   and k not in self.ex_unsupported):
+                return False                  # green only once everything has been read
+        except ValueError:
+            return False
+        diffs, checked = self._macro_diffs(name)
+        return diffs == [] and checked > 0
+
+    def _macro_diffs(self, name):
+        """([labels of the settings the radio doesn't match], number checked)."""
         st = self.macro_state
+        diffs = []
         try:
             steps = self._macro_steps(name)
         except ValueError:
-            return False
+            return ["?"], 0
         if not steps:
-            return False
+            return [], 0
         checked = 0
         own_filter = any(k == "FILTER" for k, _ in steps)
         for key, val in steps:
+            if key in ("WIDTH1", "WIDTH2", "WIDTH3"):
+                continue          # only the filter in use shows its width
             if own_filter and key in ("FILTER", "WIDTH"):
                 continue          # the filter is only the starting choice - you switch FIL1/2/3 as signals need
-            if key == "MODE":
-                ok = self.mode in ("LSB", "USB") if val == SSB_BY_BAND else self.mode == val
-            elif key == "WIDTH":
-                got = parse_hz(self.bw_var.get() or "")
-                ok = got is not None and abs(got - val) <= 100
-            elif key == "BKIN":
-                want = BKIN_VALUES.index(val)
-                if len(next((c.options for c in self.profile.controls if c.key == "bkin"), ())) == 2:
-                    want = min(want, 1)                # BKIN OFF / ON radios
-                ok = self.ctl_values.get("bkin") == want
-            elif key in MACROS.filters:
-                got = self.ctl_values.get(MACROS.filters[key])
-                ok = got is not None and bool(got) == (val == "ON")
-            elif key in self.ex_unsupported or st.get(key) == UNREADABLE:
+            ok = self._step_ok(key, val)
+            if ok is None:
                 continue                               # the radio / flrig won't tell us: ignore it
-            else:
-                ok = st.get(key) == val
             if not ok:
-                return False
+                diffs.append(self._diff_label(key))
             checked += 1
-        return checked > 0
+        return diffs, checked
+
+    def _step_ok(self, key, val):
+        """Does the radio already have this Rig Setting step? None = not known (yet)."""
+        st = self.macro_state
+        if key == "MODE":
+            if not self.mode:
+                return None
+            return self.mode in ("LSB", "USB") if val == SSB_BY_BAND else self.mode == val
+        if key == "WIDTH":
+            got = parse_hz(self.bw_var.get() or "")
+            return None if got is None else abs(got - val) <= 100
+        if key == "FILTER":
+            got = self.ctl_values.get("filter")
+            return None if got is None else got == int(str(val)[-1])
+        if key == "BKIN":
+            got = self.ctl_values.get("bkin")
+            if got is None:
+                return None
+            want = BKIN_VALUES.index(val)
+            if len(next((c.options for c in self.profile.controls if c.key == "bkin"), ())) == 2:
+                want = min(want, 1)                # BKIN OFF / ON radios
+            return got == want
+        if key in MACROS.filters:
+            got = self.ctl_values.get(MACROS.filters[key])
+            return None if got is None else bool(got) == (val == "ON")
+        if key in self.ex_unsupported or st.get(key) == UNREADABLE:
+            return None
+        if key in MACROS.menu:
+            return st.get(key) == val if st.get(key) is not None else None    # not read yet
+        return False
+
+    def _only_changed(self, name, steps):
+        """11-16h: Save and Default Settings send only what differs (6 s -> ~1 s on flrig 2.0.09).
+        Width FIL1/2/3 are sent again only if a different width went to that filter since."""
+        kind = self._run_kind(name, steps)
+        sent = self.cfg.get("fil_width_sent", {})
+        out = []
+        for key, val in steps:
+            if key in ("WIDTH1", "WIDTH2", "WIDTH3"):
+                if sent.get(f"{kind}:{key[-1]}") != str(val):
+                    out.append((key, val))
+            elif key in ("FILTER", "WIDTH"):
+                out.append((key, val))          # decided below
+            elif self._step_ok(key, val) is not True:
+                out.append((key, val))
+        if not any(k in ("WIDTH1", "WIDTH2", "WIDTH3") for k, _ in out):
+            out = [(k, v) for k, v in out if not (k in ("FILTER", "WIDTH") and self._step_ok(k, v))]
+        return out
+
+    def _run_kind(self, name, steps):
+        kind = next((k for k, n in self.KIND_NAMES.items() if n.lower() == name.strip().lower()), None)
+        if kind is None:
+            mode = next((v for k, v in steps if k == "MODE"), None)
+            kind = "voice" if mode == SSB_BY_BAND else memory_kind(mode) if mode else \
+                (memory_kind(self.mode) if self.mode else None)
+        return kind
+
+    def _diff_label(self, key):
+        if key in MACROS.filters:
+            ck = MACROS.filters[key]
+            return next((c.label for c in self.profile.controls if c.key == ck), key) if self.profile else key
+        return {"MODE": "Mode", "WIDTH": "Width", "BKIN": "BKIN"}.get(key) or item_label(key)
 
     def refresh_macro_buttons(self):
         if not self._has_macros():
@@ -1582,6 +1731,40 @@ class App(Extras):
             if not b.winfo_exists() or name == self.macro_busy:
                 continue
             b.set_on(self._macro_matches(name), C["go"])
+        self._mark_kind_buttons()
+
+    def _mark_kind_buttons(self):
+        """11-16g: under RECEIVE / FILTERS a "Default Settings" button (always there when the mode in use has a
+        Voice / Data / CW Rig Setting) puts that Rig Setting back; beside it, in amber, what the radio has changed
+        from it. RigPanel never puts it back on its own - your last settings stay, also after a restart."""
+        note = getattr(self, "kind_note", None)
+        if note is None or not note.winfo_exists():
+            return
+        here = memory_kind(self.mode) if self.mode else None
+        m = self._kind_macro(here) if here and self._has_macros() and self.connected else None
+        text = ""
+        if m is not None and self.macro_busy is None and not self._recent("mode"):
+            try:
+                keys = [key for key, _ in self._macro_steps(m["name"]) if key in MACROS.menu]
+            except ValueError:
+                keys = []
+            if True:              # 11-16i: show what's known at once; menu items join as they're read
+                diffs, _ = self._macro_diffs(m["name"])
+                if diffs:
+                    shown = ", ".join(diffs[:4]) + (f" and {len(diffs) - 4} more" if len(diffs) > 4 else "")
+                    text = f"\u26a0 Changed from your {self.KIND_NAMES[here]} settings: {shown}"
+        state = (m is not None, here, text)
+        if state == self.kind_note_shown:
+            return
+        self.kind_note_shown = state
+        if m is None:
+            note.pack_forget()
+            return
+        self.kind_note_btn.command = lambda k=here: self.set_voice_data(k)
+        self.kind_note_btn.set_on(bool(text), C["amber"])
+        self.kind_note_lbl.config(text=text)
+        if not note.winfo_ismapped():
+            note.pack(anchor="w", fill="x", pady=(8, 0), before=self.profile_lbl)
 
     def open_macro_editor(self):
         if self.macro_win is not None and self.macro_win.winfo_exists():

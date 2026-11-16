@@ -5,7 +5,7 @@
 set -e
 ZIP=$(ls -t "$HOME"/Downloads/RigPanel_V*.zip 2>/dev/null | head -1)
 [ -n "$ZIP" ] || { echo "No RigPanel_V*.zip in ~/Downloads"; exit 1; }
-DIR="$HOME/RigPanel-1.4.3"
+DIR="$HOME/RigPanel-1.4.4"
 echo "Using: $ZIP"
 
 pkill -x RigPanel 2>/dev/null && sleep 1 || true            # the installed RigPanel, if still open

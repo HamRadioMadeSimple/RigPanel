@@ -1,4 +1,4 @@
-# RigPanel: Architecture (Ver 1.4.3, build 2026-11-14h)
+# RigPanel: Architecture (Ver 1.4.4, build 2026-11-16b)
 
 > This describes RigPanel **as actually built** at build 2026-11-03a.
 > The source code is authoritative: if this document and the code disagree, the code wins -
@@ -10,7 +10,7 @@
 > real cause.
 >
 > Companion docs: `RigPanel_Session_Handoff.md` (start of a session), `FLRIG_COMPATIBILITY.md`
-> (flrig findings + how to re-test), `RigPanel_v1.4.3_User_Guide.pdf`, `RigPanel-Linux-Install.pdf`, `RigPanel_Quick_Start.pdf` (Word masters kept by the author).
+> (flrig findings + how to re-test), `RigPanel_v1.4.4_User_Guide.pdf`, `RigPanel-Linux-Install.pdf`, `RigPanel_Quick_Start.pdf` (Word masters kept by the author).
 
 ---
 
@@ -55,10 +55,10 @@ audio waterfall + pop-out + Compact View, Shift hot keys, Dark/Light themes, set
 
 | Item | State |
 |---|---|
-| Version | `APP_VERSION = "1.4.3"`, `APP_BUILD = "2026-11-14c"` (`rigpanel/core.py`; shown in title, header, status bar). 1.4.1 = the features of 2026-10-25/26, 1.4.2 = the tidy-up |
+| Version | `APP_VERSION = "1.4.4"`, `APP_BUILD = "2026-11-16a"` (`rigpanel/core.py`; shown in title, header, status bar). 1.4.1 = the features of 2026-10-25/26, 1.4.2 = the tidy-up |
 | IC-7300 | Windows 11, **flrig 2.0.12** (current release) - proven 2026-10-24 after the hex-format fix (§5): receive controls change the radio, VFO switch fast, Rig Settings confirm. Earlier also on 2.0.10. Filter item + Save & Apply + resizable editor used by the operator 2026-10-27 (Windows PC was on 27n) |
 | FT-891 | Linux Mint (the operator's go-box PC), **flrig 2.0.09**, Digirig `/dev/ttyUSB0` 19200 baud, FC-50 + ATAS - proven 2026-10-22..24 incl. V1.4 Linux package, Tuner, DNR level, Po meter. **Proven on real flrig 2.0.12 2026-10-27** (side-by-side build on the Mint PC, build 27o: fast after the `cmd_string` + checked-read fix, FLRIG_COMPATIBILITY.md) |
-| Packaging | Windows: `build_windows.bat` (PyInstaller + Inno Setup 6, `VER=1.4.3`) → `output\RigPanel_Setup_1.4.3.exe`, installs to `C:\Program Files (x86)\RigPanel` (admin), desktop icon. Linux (11-02a, standard layout shared with the operator's other apps): `build_linux.sh` (`--appimage`: also the AppImage; GitHub builds releases on Ubuntu 22.04 via `.github/workflows/release.yml`) → `output/RigPanel_Ver_1.4.3_Linux.tar.gz` (top folder `RigPanel Ver 1.4.3`, + `VERSION`, `linux_install.sh`, install + quick-start docs); users unpack it into `~/Applications` and run `sh linux_install.sh` there (menu entry + trusted desktop icon, offers to remove older copies incl. the old `~/.local/share/rigpanel`). Install doc: `docs/RigPanel-Linux-Install.docx`. **One-step update: `bash ~/Downloads/update_linux.sh`** (newest RigPanel_V*.zip in Downloads → fresh folder → build → install; keeps `.buildenv`). Linux package proven on the Mint PC; Windows installer built and run by the operator (1.3) |
+| Packaging | Windows: `build_windows.bat` (PyInstaller + Inno Setup 6, `VER=1.4.4`) → `output\RigPanel_Setup_1.4.4.exe`, installs to `C:\Program Files (x86)\RigPanel` (admin), desktop icon. Linux (11-02a, standard layout shared with the operator's other apps): `build_linux.sh` (`--appimage`: also the AppImage; GitHub builds releases on Ubuntu 22.04 via `.github/workflows/release.yml`) → `output/RigPanel_Ver_1.4.4_Linux.tar.gz` (top folder `RigPanel Ver 1.4.4`, + `VERSION`, `linux_install.sh`, install + quick-start docs); users unpack it into `~/Applications` and run `sh linux_install.sh` there (menu entry + trusted desktop icon, offers to remove older copies incl. the old `~/.local/share/rigpanel`). Install doc: `docs/RigPanel-Linux-Install.docx`. **One-step update: `bash ~/Downloads/update_linux.sh`** (newest RigPanel_V*.zip in Downloads → fresh folder → build → install; keeps `.buildenv`). Linux package proven on the Mint PC; Windows installer built and run by the operator (1.3) |
 | Tests | `bash tests/run_all.sh /usr/bin/python3.12`: `names_check.py`, then `regress.py` and `features.py` against `mock_flrig.py` (FT-891 `--real891`, IC-7300 `--flrig212`). Result of the 27q run: §10. Voice Scan checks removed from `features.py` with the feature |
 | Python | 3.9+, standard library + Tk; `numpy`, `sounddevice`, `pillow` only for the waterfall |
 | Repo | Ready for GitHub (README, CHANGELOG, requirements.txt, .gitignore, .gitattributes (line endings), GPL-3.0 planned). Handoff file is git-ignored |
@@ -84,7 +84,7 @@ in a later module, which broke Compact View until build 24h. Check with the AST 
 | `minis.py` | ~540 | `MiniMeter` (base: canvas HUD, move, corner resize, size/place memory) and `MiniLevels(MiniMeter)` |
 | `vscan.py` | ~460 | `VfoScan` window (FT-891): ▼ ■ ▲, squelch, On a signal (05-16), Begin at, License, At the end, HEARD list, click-a-digit frequency (27f-27q). `scan.py` (S-meter Voice Scan) was **removed** in 27f |
 | `extras.py` | ~400 | `CtrlTap` (system-wide Ctrl tap, 11-09) and `Extras` - mixed into `App`: CLAR/RIT, SHIFT, MUTE, VFO Scan hooks, `start_ctrl_tap` / `toggle_front` |
-| `builder.py` | ~570 | `MacroBuilder` (shown to users as **Edit Rig Settings**): Common / All Menus views, Radio now column, Save as new, **Save & Apply** (27l), resizable + `rs_geom` (27m), tooltips |
+| `builder.py` | ~570 | `MacroBuilder` (shown to users as **Edit Rig Settings**): Common / All Menus views, Radio now column, Save as new, one **Save** (16e; Save & Apply 27l removed), resizable + `rs_geom` (27m), tooltips |
 | `app.py` | ~1600 | `App(Extras)` - main window, poll handling, actions, voice/data memory, Rig Settings, hot keys, settings files |
 | `main.py` | ~40 | `set_app_icon`, `main()` |
 
@@ -502,7 +502,7 @@ the Rig or Theme box (blocked - it once switched an IC-7300 to the FT-891 profil
 - **Edit Rig Settings** (both radios): VIEW Common | All Menus (`rs_view`), MENU GROUP dropdown with
   "(n)" = items used, blue names = in this Rig Setting, Radio now column (read on group change / Read
   this group; click to copy), Read from radio also refreshes the group on screen, Save as new.
-  **Save** only stores the Rig Setting; **Save & Apply** (27l) saves and runs it, the result shows in the
+  One **Save** (16e, §8.7): applies at once if it's the Rig Setting in use, else only stores; the result shows in the
   editor (`_macro_done` → `macro_win.say`). **Resizable** (27m; never below its opening size; the All
   Menus table grows; size/place in `rs_geom`, a PC key). Tooltips on every button. IC-7300 **Filter**
   item (27n, §6.1a). The Hot Keys button lists the hot keys (`hotkey_menu`).
@@ -590,8 +590,30 @@ the Rig or Theme box (blocked - it once switched an IC-7300 to the FT-891 profil
 - Generic profiles use `generic_spec()` (MODE/FILTER/WIDTH/BKIN + filters, no menus). Yaesu-only features
   (`MD_CODES`, `po_string`, `tune_cmds`, CLAR/SHIFT reads, VFO scan, BKIN menu) are `_Absent` so `hasattr` is False and
   the app falls back to flrig. BKIN on generic Yaesu is OFF/ON (`BI`), RF gain through flrig.
+- 16b: IC-7300 / added Icom: items `WIDTH1-3` (Width FIL1/2/3). Worker `_filter_widths_order`: MODE, each
+  filter + its width, then FILTER (or the filter in use), legacy WIDTH, the rest. Editor hides `WIDTH` and shows an
+  old one as WIDTHn of its FILTER (FIL1 if none) - saved only on Save. `bw_by_kind[kind]["bw_fil"]["1".."3"]`.
 - 14d: last line of the Rig drop-down = "Add my radio...". 14g: `offer_add_radio` on connect - unknown radio + Auto-detect
   opens the window once per flrig name (`add_radio_asked`), pre-filled; `civ_guess` / `CIV_DEFAULTS` (radios.py).
+
+### 8.7 Default Settings, one Save, only-changed sends (1.4.4, builds 16a-16j)
+- **Rig Settings are recipes, not live state.** RigPanel never applies one on its own (not at start-up either):
+  the operator's last settings stay. `_mark_kind_buttons` (every poll) shows a **Default Settings** button under
+  RECEIVE / FILTERS when the mode in use has a Voice / Data / CW Rig Setting; it turns amber with
+  "⚠ Changed from your Voice settings: NB, AGC and n more" from `_macro_diffs`. Click = `set_voice_data(kind)`.
+- `_step_ok(key, val)` = one check per step (True / False / **None = not known yet** - never counts as changed).
+  `_macro_matches` (green buttons) still needs every menu item read.
+- **Only what differs is sent** (`run_macro(..., only_changed=True)` from Save, Default Settings and Voice / Data
+  / CW): `_only_changed` drops matching steps; `WIDTH1-3` only when `fil_width_sent["kind:n"]` differs (set in
+  `_macro_done`, dropped when the operator changes that filter's width in RigPanel or on the radio).
+- `_remember_macro_ctls`: applying a Rig Setting writes its NB / NR / ... into `ctl_by_kind[kind]` first, so
+  `_restore_levels` can't put the old main-screen values back right after (16d).
+- Edit Rig Settings: **one Save** (16e) - applies at once (only changes) if it's the Rig Setting in use (kind of
+  the current mode, or a green button), else "used the next time you click ...".
+- Start-up: receive controls 3 per poll, then Voice / Data / CW menu codes first (`macro_first`), 3 per poll on
+  the first pass (`macro_read_once`) - note in ~5 s on the slow practice radio (was 8).
+- Level menus with > 16 entries (FT-891 PROC 0-100) in columns, opened above the arrow if they don't fit below
+  (X11: a menu under the pointer closes on button release).
 
 ## 9. Settings file (`DATA_DIR/settings.json`)
 
@@ -614,6 +636,8 @@ change what an existing key means.
 | `rs_geom` (PC key) | Edit Rig Settings size and place |
 | `scan_band`, `scan_pos`, `scan_presets`, `scan_preset`, `scan_step`, `scan_hold_s`, `scan_weak`, `scan_strong` | **unused** (old Voice Scan) - left in existing files, harmless |
 | `rf_per_band`, `rf_by_band` (`{"rig:band": %}`) | RF gain per band |
+| `custom_rigs`, `add_radio_asked` | Add my radio (14c / 14g) |
+| `bw_by_kind[kind]["bw_fil"]` (`"1".."3"`), `fil_width_sent` (`{"kind:n": "2400"}`) | IC-7300 width per filter (16b, 16h) |
 
 Also in DATA_DIR: `my_default.json`, `settings_before_load.json`, `rigpanel_debug.log` (200 KB cap).
 

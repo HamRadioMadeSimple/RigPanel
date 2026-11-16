@@ -6,11 +6,14 @@ rem  Double-click this file in the RigPanel folder.
 rem ======================================================================
 setlocal
 cd /d "%~dp0"
-set VER=1.4.3
+set VER=1.4.4
 rem On GitHub (CI set) never wait for a key
 if defined CI (set "PAUSE=ver>nul") else (set "PAUSE=pause")
 
-where py >nul 2>nul && (set PY=py) || (set PY=python)
+rem python first, the py launcher only if python isn't on the PATH (py can fail on a locked
+rem %LOCALAPPDATA%\py.ini: "Failed to read ... Access is denied")
+set PY=py
+python --version >nul 2>nul && set PY=python
 %PY% --version >nul 2>nul || (echo Python not found. Install Python 3.9+ with "Add to PATH". & %PAUSE% & exit /b 1)
 
 echo.
