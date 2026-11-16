@@ -102,7 +102,7 @@ def flist_open():
 def flist():                                                # window is on screen now (slow screens need the wait)
     w = app.freq_win; w.freq_e.focus_force(); root.update()
     for f in ("7071", "3.575"):
-        w.freq_e.insert(0, f); w.freq_e.event_generate("<Return>", when="tail"); root.update()
+        w.freq_e.insert(0, f); w.add(); root.update()      # = Return (GitHub's virtual screen drops generated keys)
 step(flist_open, 1500)
 step(flist, 1500)
 step(lambda: (ok("frequency list add", {m["hz"] for m in app._memories()} - app.mem_start == {7071000, 3575000},
