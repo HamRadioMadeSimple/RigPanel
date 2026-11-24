@@ -37,8 +37,8 @@ Every line should end in `passed` with no `FAIL`. GitHub runs the same tests on 
 ## Where things are
 
 The full picture (modules, how RigPanel talks to flrig, radio details) is in
-[docs/RIGPANEL_ARCHITECTURE_Version_1_4_3.md](docs/RIGPANEL_ARCHITECTURE_Version_1_4_3.md);
-flrig version notes are in [docs/FLRIG_COMPATIBILITY.md](docs/FLRIG_COMPATIBILITY.md).
+[ARCHITECTURE.md](ARCHITECTURE.md);
+flrig version notes are in [dev/FLRIG_COMPATIBILITY.md](dev/FLRIG_COMPATIBILITY.md).
 Every module does `from .earlier import *`; `tests/names_check.py` catches names defined twice or used
 before they exist.
 

@@ -9,7 +9,7 @@
 > Guessing about radio behaviour cost many rounds in earlier sessions; the scripts found every
 > real cause.
 >
-> Companion docs: `RigPanel_Session_Handoff.md` (start of a session), `FLRIG_COMPATIBILITY.md`
+> Companion docs: `RigPanel_Session_Handoff.md` (start of a session), `dev/FLRIG_COMPATIBILITY.md`
 > (flrig findings + how to re-test), `RigPanel_v1.4.4_User_Guide.pdf`, `RigPanel-Linux-Install.pdf`, `RigPanel_Quick_Start.pdf` (Word masters kept by the author).
 
 ---
@@ -96,7 +96,8 @@ Entry points: `python -m rigpanel`, `run_rigpanel.py` (also the PyInstaller entr
 `rigpanel.sh`.
 
 Other files: `mock_flrig.py` (practice radio), `tests/regress.py`, `tools/` (radio diagnostic
-scripts), `examples/KW3KW_settings.json` (the operator's full station), `docs/`, build/install
+scripts), `examples/KW3KW_settings.json` (the operator's full station), `docs/` (PDF guides only), `images/` (README
+screenshots), `dev/` (flrig compatibility notes), build/install
 scripts, icons.
 
 ### 3.1 Threads (the load-bearing rule)

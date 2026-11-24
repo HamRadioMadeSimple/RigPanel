@@ -8,7 +8,7 @@ Works with any radio flrig supports; full controls are built in for the **Icom I
 
 **Download:** [Releases page](https://github.com/HamRadioMadeSimple/RigPanel/releases/latest)
 
-![RigPanel main window](docs/images/main_window.png)
+![RigPanel main window](images/main_window.png)
 
 ## Features
 
@@ -32,7 +32,7 @@ Works with any radio flrig supports; full controls are built in for the **Icom I
 
 | Mini meter | Mini Levels |
 |---|---|
-| ![](docs/images/mini_meter.png) | ![](docs/images/mini_levels.png) |
+| ![](images/mini_meter.png) | ![](images/mini_levels.png) |
 
 ## Install
 
@@ -92,7 +92,7 @@ flrig must already work with your radio. Then, in **flrig > Config > Setup**:
 | **Server** | XML-RPC server on, port 12345 |
 
 JS8Call / WSJT-X with an FT-891: Settings > Radio: PTT **CAT**, Mode **None**, Split **None**.
-More flrig notes: `docs/FLRIG_COMPATIBILITY.md`.
+More flrig notes: [dev/FLRIG_COMPATIBILITY.md](dev/FLRIG_COMPATIBILITY.md).
 
 ## Tap Ctrl to bring RigPanel forward
 
@@ -135,7 +135,10 @@ tag is made. To build yourself:
 | `tests/` | `run_all.sh`: names check, whole-app regression and feature tests against the practice radio (needs a display; Xvfb on a server) |
 | `tools/` | Radio diagnostic scripts (read-only unless the name says *write*, and those put everything back) - useful for bug reports |
 | `examples/` | `KW3KW_settings.json`: a complete station (Rig Settings, frequencies, levels). Load with Settings > Load settings from a file (also on the Releases page) |
-| `docs/` | User Guide, Quick Start and Linux install (PDF), architecture and flrig compatibility notes |
+| `docs/` | The guides (PDF): User Guide, Quick Start and Linux install |
+| `images/` | Screenshots used on this page |
+| `dev/` | Developer notes: flrig compatibility and test setup |
+| `ARCHITECTURE.md` | How the program is built, for anyone working on the code |
 
 ## Reporting problems
 

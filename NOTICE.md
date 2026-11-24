@@ -38,4 +38,4 @@ example W1AW, JS8, FT8) and net frequencies. Check the band plan and your licens
 
 ## Icon and screenshots
 
-The app icon and the screenshots in `docs/images/` were made for this project.
+The app icon and the screenshots in `images/` were made for this project.
